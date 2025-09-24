@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+import os
 
 # ---------------- Fixture Class ---------------- #
 class Fixture:
@@ -9,7 +10,6 @@ class Fixture:
         self.home = home
         self.away = away
         self.date_time = date_time
-        self.is_favourite = False
 
     def __str__(self):
         return f"[{self.league}] {self.date_time.strftime('%d %b %Y %H:%M')} - {self.home} vs {self.away}"
@@ -18,6 +18,7 @@ class Fixture:
 class FixtureManager:
     def __init__(self):
         self.fixtures = []
+        self.favourite_teams = set()
 
     def add_fixture(self, fixture):
         self.fixtures.append(fixture)
@@ -30,7 +31,6 @@ class FixtureManager:
                 league = row["league"]
                 home = row["home"]
                 away = row["away"]
-                # Convert "YYYY-MM-DD HH:MM" string to datetime object
                 date_time = datetime.strptime(row["date"], "%Y-%m-%d %H:%M")
                 self.add_fixture(Fixture(match_id, league, home, away, date_time))
 
@@ -49,6 +49,32 @@ class FixtureManager:
         return [f for f in self.fixtures 
                 if f.league.lower() == league.lower() 
                 and (f.home.lower() == team.lower() or f.away.lower() == team.lower())]
+    
+    def add_favourite_team(self, team):
+        self.favourite_teams.add(team)
+
+    def remove_favourite_team(self, team):
+        if team in self.favourite_teams:
+            self.favourite_teams.remove(team)
+            return True
+        return False
+
+    def list_favourite_fixtures(self):
+        return [f for f in self.fixtures 
+                if f.home in self.favourite_teams or f.away in self.favourite_teams]
+
+    def save_favourites(self, filename="favourites.json"):
+        with open(filename, "w") as f:
+            json.dump(list(self.favourite_teams), f, indent=4)
+
+    def load_favourites(self, filename="favourites.json"):
+        if os.path.exists(filename):
+            with open(filename, "r") as f:
+                try:
+                    data = json.load(f)
+                    self.favourite_teams = set(data)
+                except json.JSONDecodeError:
+                    print("⚠️ Favourites file is empty or corrupted.")
 
 # ---------------- Main Program ---------------- #
 if __name__ == "__main__":
@@ -94,3 +120,20 @@ if __name__ == "__main__":
             fixtures = fm.fixtures_for_team(league_choice, team_choice)
             for f in fixtures:
                 print(f)
+            fav_choice = input("\nDo you want to add this team to your favourites? (yes/no): ").strip().lower()
+            if fav_choice == "yes":
+                fm.add_favourite_team(team_choice)
+                fm.save_favourites("favourites.json")
+                print(f"⭐ {team_choice} added to favourites!")
+        elif choice == "2":
+            if not fm.favourite_teams:
+                print("\n📭 Your favourites inbox is empty!")
+            else:
+                print("\n⭐ Favourite Teams:")
+                for t in fm.favourite_teams:
+                    print("-", t)
+
+                print("\n📌 Fixtures for Favourite Teams:")
+                for f in fm.list_favourite_fixtures():
+                    print(f)
+
