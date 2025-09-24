@@ -156,6 +156,22 @@ if __name__ == "__main__":
 
         elif choice == "4":   # ⭐ Fixture Table
             print("\n📅 FIXTURE TABLE 📅")
+
+            print("\nSort Options:")
+            print("1. By Date (default)")
+            print("2. By League")
+            print("3. By Team (Home team alphabetical)")
+
+            sort_choice = input("\nEnter sort choice (1/2/3): ").strip()
+
+            if sort_choice == "2":
+                fixtures_sorted = sorted(fm.fixtures, key=lambda x: x.league.lower())
+            elif sort_choice == "3":
+                fixtures_sorted = sorted(fm.fixtures, key=lambda x: x.home.lower())
+            else:
+                fixtures_sorted = sorted(fm.fixtures, key=lambda x: x.date_time)
+
+
             print("-" * 70)
             print(f"{'Match ID':<10} {'League':<15} {'Date':<20} {'Fixture'}")
             print("-" * 70)
