@@ -1,7 +1,6 @@
 import json
 from datetime import datetime
 import os
-
 # ---------------- Fixture Class ---------------- #
 class Fixture:
     def __init__(self, match_id, league, home, away, date_time):
@@ -50,6 +49,7 @@ class FixtureManager:
                 if f.league.lower() == league.lower() 
                 and (f.home.lower() == team.lower() or f.away.lower() == team.lower())]
     
+    # -------- FAVOURITES ----------- #
     def add_favourite_team(self, team):
         self.favourite_teams.add(team)
 
@@ -80,6 +80,7 @@ class FixtureManager:
 if __name__ == "__main__":
     fm = FixtureManager()
     fm.load_from_json("fixturedata.json")   # <<<<------ CHECK NAME GUYS
+    fm.load_favourites("favourites.json")   # <<<<------ CHECK NAME GUYS
 
     print("⚽ Welcome to Football Fixtures Program ⚽\n")
 
@@ -125,6 +126,7 @@ if __name__ == "__main__":
                 fm.add_favourite_team(team_choice)
                 fm.save_favourites("favourites.json")
                 print(f"⭐ {team_choice} added to favourites!")
+        
         elif choice == "2":
             if not fm.favourite_teams:
                 print("\n📭 Your favourites inbox is empty!")
@@ -136,4 +138,35 @@ if __name__ == "__main__":
                 print("\n📌 Fixtures for Favourite Teams:")
                 for f in fm.list_favourite_fixtures():
                     print(f)
+        
+        elif choice == "3":
+            if not fm.favourite_teams:
+                print("\n📭 You have no favourites to remove!")
+            else:
+                print("\n⭐ Current Favourite Teams:")
+                for t in fm.favourite_teams:
+                    print("-", t)
+
+                team_remove = input("\nEnter the team name you want to remove: ").strip()
+                if fm.remove_favourite_team(team_remove):
+                    fm.save_favourites("favourites.json")
+                    print(f"🗑 {team_remove} removed from favourites.")
+                else:
+                    print("❌ That team is not in your favourites.")
+
+        elif choice == "4":   # ⭐ Fixture Table
+            print("\n📅 FIXTURE TABLE 📅")
+            print("-" * 70)
+            print(f"{'Match ID':<10} {'League':<15} {'Date':<20} {'Fixture'}")
+            print("-" * 70)
+            for f in sorted(fm.fixtures, key=lambda x: x.date_time):
+                print(f"{f.match_id:<10} {f.league:<15} {f.date_time.strftime('%d %b %Y %H:%M'):<20} {f.home} vs {f.away}")
+            print("-" * 70)
+        
+        elif choice == "5":
+            print("\n👋 Goodbye! Thanks for using the Fixtures Program.")
+            break
+
+        else:
+            print("❌ Invalid choice, please try again.")
 
