@@ -57,27 +57,39 @@ if __name__ == "__main__":
 
     print("⚽ Welcome to Football Fixtures Program ⚽\n")
 
-    leagues = fm.list_leagues()
-    print("Available Leagues:")
-    for i, l in enumerate(leagues, start=1):
-        print(f"{i}. {l}")
+    while True:
+        print("\n===== MAIN MENU =====")
+        print("1. Browse Leagues & Teams")
+        print("2. View Favourite Teams Inbox")
+        print("3. Remove a Team from Favourites")
+        print("4. View Fixture Table")   # ⭐ NEW
+        print("5. Exit")
 
-    league_choice = input("\nEnter league name from the list: ").strip()
+        choice = input("\nEnter your choice: ").strip()
 
-    if league_choice not in leagues:
-        print("❌ Invalid league. Please restart.")
-    else:
-        teams = fm.list_teams_in_league(league_choice)
-        print(f"\nTeams in {league_choice}:")
-        for t in teams:
-            print("-", t)
+        if choice == "1":
+            leagues = fm.list_leagues()
+            print("\nAvailable Leagues:")
+            for i, l in enumerate(leagues, start=1):
+                print(f"{i}. {l}")
 
-        team_choice = input("\nEnter team name from the list: ").strip()
+            league_choice = input("\nEnter league name from the list: ").strip()
 
-        if team_choice not in teams:
-            print("❌ Invalid team. Please restart.")
-        else:
-            # Step 3: Show fixtures for that team
+            if league_choice not in leagues:
+                print("❌ Invalid league. Try again.")
+                continue
+
+            teams = fm.list_teams_in_league(league_choice)
+            print(f"\nTeams in {league_choice}:")
+            for t in teams:
+                print("-", t)
+
+            team_choice = input("\nEnter team name from the list: ").strip()
+
+            if team_choice not in teams:
+                print("❌ Invalid team. Try again.")
+                continue
+
             print(f"\n📅 Fixtures for {team_choice} in {league_choice}:")
             fixtures = fm.fixtures_for_team(league_choice, team_choice)
             for f in fixtures:
