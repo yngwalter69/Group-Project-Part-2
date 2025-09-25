@@ -23,15 +23,30 @@ class FixtureManager:
         self.fixtures.append(fixture)
 
     def load_from_json(self, filename):
-        with open(filename, "r") as f:
-            data = json.load(f)
-            for row in data:
+        if not os.path.exists(filename):
+            print(f"❌ File '{filename}' not found.")
+            return
+        
+        try: 
+            with open(filename, "r") as f:
+                data = json.load(f)
+        except json.JSONDecodeError:
+            print(f"⚠️ File '{filename}' is empty or contains invalid JSON.")
+            return
+        except Exception as e:
+            print(f"⚠️ Unexpected error reading '{filename}': {e}")
+            return
+        
+        for row in data:
+            try:
                 match_id = int(row["match_id"])
                 league = row["league"]
                 home = row["home"]
                 away = row["away"]
                 date_time = datetime.strptime(row["date"], "%Y-%m-%d %H:%M")
                 self.add_fixture(Fixture(match_id, league, home, away, date_time))
+            except (KeyError, ValueError) as e:
+                print(f"⚠️ Skipping invalid fixture: {e}")   
 
     def list_leagues(self):
         return sorted(set(f.league for f in self.fixtures))
@@ -64,8 +79,12 @@ class FixtureManager:
                 if f.home in self.favourite_teams or f.away in self.favourite_teams]
 
     def save_favourites(self, filename="favourites.json"):
-        with open(filename, "w") as f:
-            json.dump(list(self.favourite_teams), f, indent=4)
+        try:
+            with open(filename, "w") as f:
+                json.dump(list(self.favourite_teams), f, indent=4)
+            print(f"Favourites saved to '{filename}'.")
+        except (IOError, OSError) as e:
+            print(f"Failed to save favourites to '{filename}':{e}")
 
     def load_favourites(self, filename="favourites.json"):
         if os.path.exists(filename):
@@ -209,4 +228,4 @@ if __name__ == "__main__":
             break
 
         else:
-            print("❌ Invalid choice, please try again.")
+            print("❌ Invalid choice, please try again.")
