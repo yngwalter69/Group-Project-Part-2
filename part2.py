@@ -23,15 +23,29 @@ class FixtureManager:
         self.fixtures.append(fixture)
 
     def load_from_json(self, filename):
-        with open(filename, "r") as f:
-            data = json.load(f)
-            for row in data:
+        if not os.path.exists(filename):
+            print(f"❌ File '{filename}' not found.")
+            return
+        try:
+            with open(filename, "r") as f:
+                data = json.load(f)
+        except json.JSONDecodeError:
+            print(f"File '{filename}' is empty or contains invalid JSON.")
+            return
+        except Exception as e:
+            print(f"Unexpected error reading '{filename}' : {e}")
+            return
+        
+        for row in data:
+            try: 
                 match_id = int(row["match_id"])
                 league = row["league"]
                 home = row["home"]
                 away = row["away"]
                 date_time = datetime.strptime(row["date"], "%Y-%m-%d %H:%M")
                 self.add_fixture(Fixture(match_id, league, home, away, date_time))
+            except (KeyError, ValueError) as e:
+                print (f"Skipping invalid fixture: {e}")
 
     def list_leagues(self):
         return sorted(set(f.league for f in self.fixtures))
@@ -48,6 +62,17 @@ class FixtureManager:
         return [f for f in self.fixtures 
                 if f.league.lower() == league.lower() 
                 and (f.home.lower() == team.lower() or f.away.lower() == team.lower())]
+    def search_fixtures(self, keyword):
+        results = [
+            f for f in self.fixtures
+            if keyword.lower() in f.home.lower()
+            or keyword.lower() in f.away.lower()
+            or keyword.lower() in f.league.lower()
+        ]
+        if not results:
+            print(f"❌ No fixtures found for '{keyword}'. Try a full team or league name.")
+        return results
+
     
     # -------- FAVOURITES ----------- #
     def add_favourite_team(self, team):
@@ -64,8 +89,12 @@ class FixtureManager:
                 if f.home in self.favourite_teams or f.away in self.favourite_teams]
 
     def save_favourites(self, filename="favourites.json"):
-        with open(filename, "w") as f:
-            json.dump(list(self.favourite_teams), f, indent=4)
+        try:
+            with open(filename, "w") as f:
+                json.dump(list(self.favourite_teams), f, indent=4)
+            print (f"Favourites saved to '{filename}'.")
+        except (IOError, OSError) as e:
+            print(f"Failed to save favourites to '{filename}': {e}")
 
     def load_favourites(self, filename="favourites.json"):
         if os.path.exists(filename):
@@ -87,10 +116,11 @@ if __name__ == "__main__":
     while True:
         print("\n===== MAIN MENU =====")
         print("1. Browse Leagues & Teams")
-        print("2. View Favourite Teams Inbox")
-        print("3. Remove a Team from Favourites")
-        print("4. View Fixture Table")   # ⭐ NEW
-        print("5. Exit")
+        print("2. Search fixtures by keyword")
+        print("3. View Favourite Teams Inbox")
+        print("4. Remove a Team from Favourites")
+        print("5. View Fixture Table")   
+        print("6. Exit")
 
         choice = input("\nEnter your choice: ").strip()
 
@@ -127,7 +157,22 @@ if __name__ == "__main__":
                 fm.save_favourites("favourites.json")
                 print(f"⭐ {team_choice} added to favourites!")
         
-        elif choice == "2":
+        elif choice == "2":   
+            keyword = input("\nEnter keyword of name to search (team or league): ").strip()
+            results = fm.search_fixtures(keyword)
+
+            if not results:
+                print(f"❌ No fixtures found for '{keyword}'.")
+            else:
+                print(f"\n🔍 Search Results for '{keyword}':")
+                print("-" * 70)
+                print(f"{'Match ID':<10} {'League':<15} {'Date':<20} {'Fixture'}")
+                print("-" * 70)
+                for f in results:
+                    print(f"{f.match_id:<10} {f.league:<15} {f.date_time.strftime('%d %b %Y %H:%M'):<20} {f.home} vs {f.away}")
+                print("-" * 70)
+        
+        elif choice == "3":
             if not fm.favourite_teams:
                 print("\n📭 Your favourites inbox is empty!")
             else:
@@ -139,7 +184,7 @@ if __name__ == "__main__":
                 for f in fm.list_favourite_fixtures():
                     print(f)
         
-        elif choice == "3":
+        elif choice == "4":
             if not fm.favourite_teams:
                 print("\n📭 You have no favourites to remove!")
             else:
@@ -154,7 +199,7 @@ if __name__ == "__main__":
                 else:
                     print("❌ That team is not in your favourites.")
 
-        elif choice == "4":   # ⭐ Fixture Table
+        elif choice == "5":   
             print("\n📅 FIXTURE TABLE 📅")
 
             print("\nSort Options:")
@@ -179,7 +224,7 @@ if __name__ == "__main__":
                 print(f"{f.match_id:<10} {f.league:<15} {f.date_time.strftime('%d %b %Y %H:%M'):<20} {f.home} vs {f.away}")
             print("-" * 70)
         
-        elif choice == "5":
+        elif choice == "6":
             print("\n👋 Goodbye! Thanks for using the Fixtures Program.")
             break
 
