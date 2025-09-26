@@ -219,7 +219,7 @@ if __name__ == "__main__":
             print("-" * 70)
             print(f"{'Match ID':<10} {'League':<15} {'Date':<20} {'Fixture'}")
             print("-" * 70)
-            for f in sorted(fm.fixtures, key=lambda x: x.date_time):
+            for f in fixtures_sorted:
                 print(f"{f.match_id:<10} {f.league:<15} {f.date_time.strftime('%d %b %Y %H:%M'):<20} {f.home} vs {f.away}")
             print("-" * 70)
         
